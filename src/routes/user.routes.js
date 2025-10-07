@@ -1,9 +1,8 @@
 const express = require('express');
-const { crearUsuario } = require('../controllers/user.controller');
-
 const router = express.Router();
+const userController = require('../controllers/user.controller');
 
-// Nuevo registro de usuario usando MySQL (SP_Usuario_Alta)
-router.post('/register', crearUsuario);
+// Ruta para registrar usuario
+router.post('/register', userController.createUser);
 
 module.exports = router;

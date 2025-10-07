@@ -1,82 +1,105 @@
 // src/controllers/auth.controller.js
-const bcrypt = require('bcryptjs');
-const User = require('../models/user.model');
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const User = require("../models/user.model");
 
-// Registro de usuario
+// ======================= REGISTRO =======================
 const register = async (req, res) => {
   try {
-    const { nombre, email, password } = req.body;
+    console.log("📩 Body recibido en /register:", req.body);
 
-    // Validar campos
-    if (!nombre || !email || !password) {
-      return res.status(400).json({ error: 'Faltan campos' });
+    const { Usuario, Nombre, Correo, contrasena, Edad, Descripcion } = req.body;
+
+    // Validar campos obligatorios
+    if (!Usuario || !Nombre || !Correo || !contrasena) {
+      return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
 
-    // Verificar si ya existe el correo
-    const existe = await User.findOne({ email });
-    if (existe) {
-      return res.status(400).json({ error: 'El correo ya está registrado' });
-    }
+    // Validar duplicados
+    const existeCorreo = await User.findOne({ where: { Correo } });
+    if (existeCorreo)
+      return res.status(400).json({ error: "El correo ya está registrado" });
 
-    // Encriptar contraseña con bcrypt
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(password, salt);
+    const existeNombre = await User.findOne({ where: { Nombre } });
+    if (existeNombre)
+      return res.status(400).json({ error: "El nombre ya está registrado" });
 
-    // Crear nuevo usuario
-    const user = await User.create({ nombre, email, password: hash });
+    // Cifrar contraseña
+    const hash = await bcrypt.hash(contrasena, 10);
 
-    // Responder sin enviar el password
+    // Crear usuario
+    const user = await User.create({
+      Usuario,
+      Nombre,
+      Correo,
+      contrasena: hash,
+      Edad,
+      Descripcion,
+    });
+
+    // Respuesta
     return res.status(201).json({
-      message: 'Usuario registrado correctamente',
+      message: "✅ Usuario registrado correctamente",
       usuario: {
-        id: user._id,
-        nombre: user.nombre,
-        email: user.email
-      }
+        id: user.ID_Usuario,
+        Usuario: user.Usuario,
+        Nombre: user.Nombre,
+        Correo: user.Correo,
+      },
     });
   } catch (err) {
-    console.error(err);
-    if (err.code === 11000) { // Error de índice único
-      return res.status(400).json({ error: 'El correo ya está registrado' });
-    }
-    return res.status(500).json({ error: 'Error del servidor' });
+    console.error("❌ Error en /register:", err);
+    return res.status(500).json({
+      error: "Error interno al registrar usuario",
+      detalles: err.message,
+    });
   }
 };
 
-// Inicio de sesión
+// ======================= LOGIN =======================
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    console.log("📩 Body recibido en /login:", req.body);
+
+    const { Correo, contrasena } = req.body;
 
     // Validar campos
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Faltan campos' });
-    }
+    if (!Correo || !contrasena)
+      return res.status(400).json({ error: "Faltan campos obligatorios" });
 
-    // Buscar usuario e incluir el password (por defecto no se selecciona)
-    const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
-    }
+    // Buscar usuario
+    const user = await User.findOne({ where: { Correo } });
+    if (!user) return res.status(401).json({ error: "Credenciales inválidas" });
 
-    // Comparar password ingresado con el hash
-    const esValida = await bcrypt.compare(password, user.password);
-    if (!esValida) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
-    }
+    // Comparar contraseñas
+    const esValida = await bcrypt.compare(contrasena, user.contrasena);
+    if (!esValida)
+      return res.status(401).json({ error: "Credenciales inválidas" });
 
-    // Respuesta exitosa
+    // Generar token JWT
+    const token = jwt.sign(
+      { id: user.ID_Usuario, correo: user.Correo },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    // Respuesta
     return res.json({
-      message: 'Inicio de sesión exitoso',
+      message: "✅ Inicio de sesión exitoso",
+      token,
       usuario: {
-        id: user._id,
-        nombre: user.nombre,
-        email: user.email
-      }
+        id: user.ID_Usuario,
+        Usuario: user.Usuario,
+        Nombre: user.Nombre,
+        Correo: user.Correo,
+      },
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Error del servidor' });
+    console.error("❌ Error en /login:", err);
+    return res.status(500).json({
+      error: "Error interno al iniciar sesión",
+      detalles: err.message,
+    });
   }
 };
 

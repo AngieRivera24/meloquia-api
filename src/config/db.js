@@ -1,13 +1,24 @@
 // src/config/db.js
 const { Sequelize } = require('sequelize');
+require('dotenv').config();
 
-const sequelize = new Sequelize('meloquia', 'meloquiaadmin', 'xAn4pT6uVvJPhEc', {
-  host: '<TU-SERVIDOR>.mysql.database.azure.com',
-  dialect: 'mysql',
-  port: 3306,
-  dialectOptions: {
-    ssl: { require: true } // Azure requiere SSL
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
+  {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT || 3306,
+    dialect: 'mysql',
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
+    logging: false // puedes dejarlo en true para debug
   }
-});
+);
 
 module.exports = sequelize;
+
