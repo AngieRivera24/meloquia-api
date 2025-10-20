@@ -1,29 +1,53 @@
-# Meloquia API 
+# MELOQUIA API  
+![Node.js](https://img.shields.io/badge/Node.js-20.x-brightgreen?logo=node.js)  
+![Azure](https://img.shields.io/badge/Deployed%20on-Azure-blue?logo=microsoft-azure)  
+![Spotify API](https://img.shields.io/badge/Integration-Spotify-green?logo=spotify)  
+![Status](https://img.shields.io/badge/Sprint-4%20Completed-success)
 
-Proyecto backend del sistema Meloquia, una plataforma para catalogar canciones y albumes.
-Desarrollado como parte del curso "Administracion de Proyectos de Computacion" en la Facultad de Informatica (UAQ).
+---
 
-## Tecnologias utilizadas
-- Node.js
-- Express.js
-- Sequelize ORM
-- MySQL (Azure Database)
-- JWT para autenticacion
-- Azure App Service (Despliegue)
+## Descripción general  
+**Meloquia API** es una aplicación backend desarrollada con **Node.js**, **Express** y **MySQL**, desplegada en **Azure App Service**.  
+Su objetivo es ofrecer un punto centralizado para la gestión y consumo de datos musicales, incluyendo integración con la **API de Spotify** para obtener artistas, álbumes y canciones populares.
 
-## Endpoints principales
-| Metodo | Endpoint | Descripcion | Body esperado |
-|--------|-----------|--------------|----------------|
-| POST | /api/auth/register | Registra un usuario nuevo | { "Usuario": "...", "Nombre": "...", "Correo": "...", "contrasena": "...", "Edad": 25, "Descripcion": "..." } |
-| POST | /api/auth/login | Inicia sesion y devuelve un token JWT | { "Correo": "...", "contrasena": "..." } |
-| GET | /api/users | Lista todos los usuarios registrados | _No requiere body_ |
+---
 
-## Scrum Team
-| Nombre | Rol | Responsabilidad |
-|---------|-----|----------------|
-| Angie Rivera Morgado | Backend Developer | API REST, Azure, MySQL |
-| Diego | Frontend Developer | Interfaz y pruebas |
-| Edgar | Documentation and QA | Manuales, evidencias |
+## Tecnologías principales
+- **Node.js (v20 LTS)**
+- **Express.js**
+- **Sequelize ORM**
+- **MySQL (Azure Database)**
+- **Spotify Web API**
+- **Azure App Service**
 
-URL del proyecto en Azure:
-https://meloquia-api-bpadcyajdwgcbpgn.canadacentral-01.azurewebsites.net/
+---
+
+## Despliegue en Azure
+ **API pública:**  
+ https://meloquia-api.azurewebsites.net  
+
+Ejemplo de endpoint:  
+```bash
+https://meloquia-api.azurewebsites.net/api/spotify/top-artists
+
+## Estructura principal del proyecto 
+MELOQUIA/
+├── src/
+│   ├── controllers/
+│   │   ├── auth.controller.js
+│   │   ├── user.controller.js
+│   │   └── spotify.controller.js
+│   ├── routes/
+│   │   ├── auth.routes.js
+│   │   ├── user.routes.js
+│   │   └── spotify.routes.js
+│   ├── services/
+│   │   └── spotify.service.js
+│   └── models/
+│       └── index.js
+├── config/
+│   └── database.js
+├── .env.example
+└── README.md
+
+
