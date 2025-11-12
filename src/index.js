@@ -8,24 +8,43 @@ const cors = require("cors");
 const userRoutes = require("./routes/user.routes");
 const authRoutes = require("./routes/auth.routes");
 const spotifyRoutes = require("./routes/spotify.routes");
-const resenaRoutes = require("./routes/resena.routes"); // ✅ ESTA ES LA NUEVA
+const resenaRoutes = require("./routes/resena.routes");
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+/* ============================================
+   🧩 MIDDLEWARES PRINCIPALES
+   ============================================ */
 
-// Ruta de prueba
+// 🔓 Permitir solicitudes desde el frontend (meloquia.site)
+app.use(cors({
+  origin: ["https://meloquia.site", "https://www.meloquia.site", "*"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+// 🧠 Permitir parseo de JSON y formularios
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+
+/* ============================================
+   🚀 RUTA DE PRUEBA
+   ============================================ */
 app.get("/", (req, res) => {
-  res.send("🚀 API de Meloquia corriendo correctamente");
+  res.send("🚀 API de Meloquia corriendo correctamente en Azure");
 });
 
-// Registrar rutas
+/* ============================================
+   🧭 RUTAS PRINCIPALES
+   ============================================ */
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/spotify", spotifyRoutes);
-app.use("/api/resenas", resenaRoutes); // ✅ ESTA LÍNEA EXPONE EL ENDPOINT
+app.use("/api/resenas", resenaRoutes);
 
+/* ============================================
+   ⚙️ INICIO DEL SERVIDOR
+   ============================================ */
 const PORT = process.env.PORT || 8080;
 
 async function startServer() {
