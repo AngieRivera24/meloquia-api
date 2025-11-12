@@ -85,7 +85,8 @@ const login = async (req, res) => {
     }
 
     // 🔑 Comparar contraseñas con bcrypt
-    const esValida = await bcrypt.compare(contrasena, user.contrasena);
+        const hash = await bcrypt.hash(contrasena.trim(), 10)
+    const esValida = await bcrypt.compare(hash, user.contrasena);
     if (!esValida) {
       console.warn("⚠️ Contraseña incorrecta para:", Correo);
       return res.status(401).json({ error: "Correo o contraseña incorrectos" });
