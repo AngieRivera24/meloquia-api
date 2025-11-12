@@ -56,7 +56,6 @@ const register = async (req, res) => {
         Correo: user.Correo,
       },
     });
-
   } catch (err) {
     console.error("❌ Error en /register:", err);
     return res.status(500).json({ error: "Error interno al registrar usuario" });
@@ -76,25 +75,25 @@ const login = async (req, res) => {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
 
-    // 🔍 Buscar usuario
+    // 🔍 Buscar usuario por correo
     const user = await User.findOne({ where: { Correo } });
     if (!user) {
       console.warn("⚠️ Intento de login con correo inexistente:", Correo);
-      return res.status(401).json({ error: "Credenciales inválidas" });
+      return res.status(401).json({ error: "Correo o contraseña incorrectos" });
     }
 
-    // 🔑 Comparar contraseñas
+    // 🔑 Comparar contraseña ingresada con el hash almacenado
     const esValida = await bcrypt.compare(contrasena, user.contrasena);
     if (!esValida) {
       console.warn("⚠️ Contraseña incorrecta para:", Correo);
-      return res.status(401).json({ error: "Credenciales inválidas" });
+      return res.status(401).json({ error: "Correo o contraseña incorrectos" });
     }
 
     // 🎫 Generar token JWT seguro
     const token = jwt.sign(
       { id: user.ID_Usuario, correo: user.Correo },
-      process.env.JWT_SECRET,
-      { expiresIn: "2h" } // ⏰ ampliado a 2h
+      process.env.JWT_SECRET || "clave_secreta_por_defecto",
+      { expiresIn: "2h" }
     );
 
     // 🟢 Respuesta
@@ -108,7 +107,6 @@ const login = async (req, res) => {
         Correo: user.Correo,
       },
     });
-
   } catch (err) {
     console.error("❌ Error en /login:", err);
     return res.status(500).json({ error: "Error interno al iniciar sesión" });
