@@ -1,3 +1,4 @@
+// src/controllers/spotify.controller.js
 const axios = require("axios");
 const {
   searchTrack,
@@ -6,9 +7,16 @@ const {
   getTopTracks,
   getNewReleases,
   getAccessToken,
+  searchGeneral,
+  getTopAlbums,
+  getNewAlbumReleases
 } = require("../services/spotify.service");
 
-// 🎵 Buscar canciones
+/* ======================================================
+   🎵 BÚSQUEDAS INDIVIDUALES
+   ====================================================== */
+
+// 🎧 Buscar canciones
 exports.buscarCancion = async (req, res) => {
   try {
     const { q } = req.query;
@@ -20,8 +28,8 @@ exports.buscarCancion = async (req, res) => {
     const resultados = await searchTrack(q);
     res.json({ resultados });
   } catch (err) {
-    console.error("❌ Error en /search:", err);
-    res.status(500).json({ error: err.message });
+    console.error("❌ Error en /search:", err.message);
+    res.status(500).json({ error: "Error al buscar canciones en Spotify" });
   }
 };
 
@@ -37,8 +45,8 @@ exports.buscarArtista = async (req, res) => {
     const resultados = await searchArtist(q);
     res.json({ resultados });
   } catch (err) {
-    console.error("❌ Error en /artist:", err);
-    res.status(500).json({ error: err.message });
+    console.error("❌ Error en /artist:", err.message);
+    res.status(500).json({ error: "Error al buscar artistas en Spotify" });
   }
 };
 
@@ -54,27 +62,48 @@ exports.buscarAlbum = async (req, res) => {
     const resultados = await searchAlbum(q);
     res.json({ resultados });
   } catch (err) {
-    console.error("❌ Error en /album:", err);
-    res.status(500).json({ error: err.message });
+    console.error("❌ Error en /album:", err.message);
+    res.status(500).json({ error: "Error al buscar álbumes en Spotify" });
   }
 };
 
-// 🏆 Top canciones globales o por país (dinámico)
+// 🔍 Buscar general (artistas, canciones y álbumes en un solo endpoint)
+exports.buscarGeneral = async (req, res) => {
+  try {
+    const { q, type } = req.query;
+    if (!q)
+      return res
+        .status(400)
+        .json({ error: "Debes enviar el parámetro 'q' en la búsqueda." });
+
+    const resultados = await searchGeneral(q, type);
+    res.json({ resultados });
+  } catch (err) {
+    console.error("❌ Error en /search/all:", err.message);
+    res.status(500).json({ error: "Error al realizar búsqueda general en Spotify" });
+  }
+};
+
+/* ======================================================
+   🏆 TOP CANCIONES Y ARTISTAS
+   ====================================================== */
+
+// 🏆 Top canciones globales o por país
 exports.topCanciones = async (req, res) => {
   try {
-    const { country } = req.query; // ejemplo: ?country=MX
+    const { country } = req.query; // Ejemplo: ?country=MX
     const resultados = await getTopTracks(country);
     res.json({ resultados });
   } catch (err) {
-    console.error("❌ Error en /top-tracks:", err.response?.data || err.message);
-    res.status(500).json({ error: err.message });
+    console.error("❌ Error en /top-tracks:", err.message);
+    res.status(500).json({ error: "Error al obtener canciones populares" });
   }
 };
 
-// 🌍 Top artistas populares (dinámico por género)
+// 🌍 Top artistas por género (o globales)
 exports.topArtistas = async (req, res) => {
   try {
-    const { genre = "latin" } = req.query; // Puedes cambiar el género por parámetro
+    const { genre = "latin" } = req.query; // Género por defecto
     const token = await getAccessToken();
 
     const response = await axios.get("https://api.spotify.com/v1/search", {
@@ -93,31 +122,47 @@ exports.topArtistas = async (req, res) => {
         "https://upload.wikimedia.org/wikipedia/commons/8/84/Spotify_icon.svg",
     }));
 
-    res.setHeader("Content-Type", "application/json");
-    res.send(JSON.stringify({ resultados: artistas }));
+    res.json({ resultados: artistas });
   } catch (err) {
-    console.error("❌ Error en /top-artists dinámico:");
-    if (err.response) {
-      console.error("📡 STATUS:", err.response.status);
-      console.error("📜 DATA:", err.response.data);
-    } else if (err.request) {
-      console.error("📨 REQUEST sin respuesta:", err.request);
-    } else {
-      console.error("⚙️ ERROR:", err.message);
-    }
-    res
-      .status(500)
-      .json({ error: "No se pudieron obtener los artistas desde Spotify." });
+    console.error("❌ Error en /top-artists:", err.message);
+    res.status(500).json({ error: "No se pudieron obtener los artistas desde Spotify." });
   }
 };
 
-// 🆕 Nuevos lanzamientos (por país, ej. MX)
+/* ======================================================
+   💿 TOP ÁLBUMES Y LANZAMIENTOS
+   ====================================================== */
+
+// 💿 Top álbumes globales o por país
+exports.topAlbums = async (req, res) => {
+  try {
+    const { country } = req.query; // Ejemplo: ?country=MX
+    const resultados = await getTopAlbums(country);
+    res.json({ resultados });
+  } catch (err) {
+    console.error("❌ Error en /top-albums:", err.message);
+    res.status(500).json({ error: "Error al obtener los top álbumes" });
+  }
+};
+
+// 🆕 Nuevos lanzamientos (mezcla de álbumes y canciones)
 exports.nuevosLanzamientos = async (req, res) => {
   try {
     const resultados = await getNewReleases();
     res.json({ resultados });
   } catch (err) {
-    console.error("❌ Error en /new-releases:", err);
-    res.status(500).json({ error: err.message });
+    console.error("❌ Error en /new-releases:", err.message);
+    res.status(500).json({ error: "Error al obtener nuevos lanzamientos" });
+  }
+};
+
+// 🆕 Nuevos lanzamientos de álbumes (detallado)
+exports.nuevosLanzamientosAlbums = async (req, res) => {
+  try {
+    const resultados = await getNewAlbumReleases();
+    res.json({ resultados });
+  } catch (err) {
+    console.error("❌ Error en /new-releases/albums:", err.message);
+    res.status(500).json({ error: "Error al obtener nuevos lanzamientos de álbumes" });
   }
 };

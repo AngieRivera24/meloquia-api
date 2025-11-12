@@ -1,61 +1,63 @@
 // src/repositories/user.repository.js
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 const User = require("../models/user.model");
 
-// 🆕 Crear usuario
-async function createUser({
-  Usuario,
-  Nombre,
-  Correo,
-  contrasena,
-  Edad,
-  Descripcion,
-}) {
+// 🧩 Crear usuario con contraseña limpia y cifrada
+async function createUser({ Usuario, Nombre, Correo, contrasena, Edad, Descripcion }) {
+  // Elimina espacios invisibles antes y después
+  const passwordLimpia = contrasena.trim();
+
+  // Cifra la contraseña limpia
+  const hashedPassword = await bcrypt.hash(passwordLimpia, 10);
+
+  // Crea el usuario
   return await User.create({
     Usuario,
     Nombre,
     Correo,
-    contrasena,
+    contrasena: hashedPassword,
     Edad,
     Descripcion,
   });
 }
 
-// 📋 Obtener todos los usuarios
+// 🔹 Obtener todos los usuarios
 async function getAllUsers() {
   return await User.findAll();
 }
 
-// 🔎 Obtener usuario por ID
+// 🔹 Obtener usuario por ID
 async function getUserById(id) {
   return await User.findByPk(id);
 }
 
-// 🔍 Obtener usuario por correo
+// 🔹 Obtener usuario por correo (para login)
 async function getUserByEmail(Correo) {
   return await User.findOne({ where: { Correo } });
 }
 
-// 🔍 Obtener usuario por nombre de usuario
+// 🔹 Obtener usuario por nombre de usuario
 async function getUserByUsername(Usuario) {
   return await User.findOne({ where: { Usuario } });
 }
 
-// ✏️ Actualizar perfil
+//  Actualizar datos del usuario (perfil)
 async function updateUser(id, data) {
   const user = await User.findByPk(id);
   if (!user) return null;
-  await user.update(data);
-  return user;
+
+  await user.update(data); //  Aplica los cambios directamente
+  return user;             // Devuelve el usuario actualizado
 }
 
-// 🔒 Actualizar contraseña
-async function updatePassword(id, hash) {
+//  Actualizar contraseña
+async function updatePassword(id, hashedPassword) {
   const user = await User.findByPk(id);
-  if (!user) return null;
-  user.contrasena = hash;
+  if (!user) return false;
+
+  user.contrasena = hashedPassword;
   await user.save();
-  return user;
+  return true;
 }
 
 module.exports = {
