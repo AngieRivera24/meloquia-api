@@ -166,3 +166,48 @@ exports.nuevosLanzamientosAlbums = async (req, res) => {
     res.status(500).json({ error: "Error al obtener nuevos lanzamientos de álbumes" });
   }
 };
+
+/* ======================================================
+   🎶 DETALLES DE UN ÁLBUM
+   ====================================================== */
+
+// 📀 Obtener detalles de un álbum desde Spotify por su ID
+exports.detallesAlbum = async (req, res) => {
+  try {
+    const albumId = req.query.id;
+    if (!albumId) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Falta el parámetro 'id' del álbum." });
+    }
+
+    const token = await getAccessToken();
+    const response = await axios.get(`https://api.spotify.com/v1/albums/${albumId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const album = response.data;
+
+    // Estructurar los datos que regresaremos
+    const info = {
+      id: album.id,
+      nombre: album.name,
+      artista: album.artists.map((a) => a.name).join(", "),
+      imagen: album.images?.[0]?.url || null,
+      totalCanciones: album.total_tracks,
+      fechaLanzamiento: album.release_date,
+      urlSpotify: album.external_urls.spotify,
+    };
+
+    return res.json({
+      success: true,
+      album: info,
+    });
+  } catch (err) {
+    console.error("❌ Error al obtener detalles del álbum:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: "Error al obtener los detalles del álbum desde Spotify",
+    });
+  }
+};

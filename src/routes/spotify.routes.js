@@ -3,16 +3,17 @@ const express = require("express");
 const router = express.Router();
 
 // 📦 Importar controladores de Spotify
-const { 
-  buscarCancion, 
-  buscarArtista, 
-  buscarAlbum, 
+const {
+  buscarCancion,
+  buscarArtista,
+  buscarAlbum,
   topCanciones,
   topArtistas,
   nuevosLanzamientos,
   buscarGeneral,
   topAlbums,
-  nuevosLanzamientosAlbums
+  nuevosLanzamientosAlbums,
+  detallesAlbum // ✅ nuevo controlador agregado
 } = require("../controllers/spotify.controller");
 
 /* ======================================================
@@ -56,6 +57,13 @@ router.get("/new-releases", nuevosLanzamientos);
 
 // 💿 Nuevos lanzamientos de álbumes con año y artista
 router.get("/new-releases/albums", nuevosLanzamientosAlbums);
+
+/* ======================================================
+   💿 DETALLES DE UN ÁLBUM (para reseñas y frontend)
+   ====================================================== */
+
+// Ejemplo: /api/spotify/album-details?id=3OxfaVgvTxUTy7276t7SPU
+router.get("/album-details", detallesAlbum);
 
 /* ======================================================
    📦 EXPORTAR ROUTER
