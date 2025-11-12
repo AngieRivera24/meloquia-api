@@ -8,12 +8,12 @@ const register = async (req, res) => {
     console.log("📩 Body recibido en /register:", req.body);
 
     // 🧹 Normalizar y limpiar entradas
-    const Usuario = (req.body.Usuario || "").trim();
-    const Nombre = (req.body.Nombre || "").trim();
-    const Correo = (req.body.Correo || req.body.correo || "").trim().toLowerCase();
+    const Usuario = (req.body.Usuario || req.body.usuario || "").trim();
+    const Nombre = (req.body.Nombre || req.body.nombre || "").trim();
+    const Correo = (req.body.Correo || req.body.correo || req.body.email || "").trim().toLowerCase();
     const contrasena = (req.body.contrasena || req.body.password || "").trim();
-    const Edad = req.body.Edad || null;
-    const Descripcion = (req.body.Descripcion || "").trim();
+    const Edad = req.body.Edad || req.body.edad || null;
+    const Descripcion = (req.body.Descripcion || req.body.descripcion || "").trim();
 
     // 🛑 Validaciones de campos
     if (!Usuario || !Nombre || !Correo || !contrasena) {
@@ -56,6 +56,7 @@ const register = async (req, res) => {
         Correo: user.Correo,
       },
     });
+
   } catch (err) {
     console.error("❌ Error en /register:", err);
     return res.status(500).json({ error: "Error interno al registrar usuario" });
@@ -68,21 +69,21 @@ const login = async (req, res) => {
     console.log("📩 Body recibido en /login:", req.body);
 
     // 🧹 Normalizar entradas
-    const Correo = (req.body.Correo || req.body.correo || "").trim().toLowerCase();
+    const Correo = (req.body.Correo || req.body.correo || req.body.email || "").trim().toLowerCase();
     const contrasena = (req.body.contrasena || req.body.password || "").trim();
 
     if (!Correo || !contrasena) {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
 
-    // 🔍 Buscar usuario por correo
+    // 🔍 Buscar usuario
     const user = await User.findOne({ where: { Correo } });
     if (!user) {
       console.warn("⚠️ Intento de login con correo inexistente:", Correo);
       return res.status(401).json({ error: "Correo o contraseña incorrectos" });
     }
 
-    // 🔑 Comparar contraseña ingresada con el hash almacenado
+    // 🔑 Comparar contraseñas
     const esValida = await bcrypt.compare(contrasena, user.contrasena);
     if (!esValida) {
       console.warn("⚠️ Contraseña incorrecta para:", Correo);
@@ -92,7 +93,7 @@ const login = async (req, res) => {
     // 🎫 Generar token JWT seguro
     const token = jwt.sign(
       { id: user.ID_Usuario, correo: user.Correo },
-      process.env.JWT_SECRET || "clave_secreta_por_defecto",
+      process.env.JWT_SECRET,
       { expiresIn: "2h" }
     );
 
@@ -107,6 +108,7 @@ const login = async (req, res) => {
         Correo: user.Correo,
       },
     });
+
   } catch (err) {
     console.error("❌ Error en /login:", err);
     return res.status(500).json({ error: "Error interno al iniciar sesión" });
