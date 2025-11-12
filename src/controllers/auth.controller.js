@@ -81,7 +81,7 @@ const login = async (req, res) => {
     const user = await User.findOne({ where: { Correo } });
     if (!user) {
       console.warn("⚠️ Intento de login con correo inexistente:", Correo);
-      return res.status(401).json({ error: "Correo o contraseña incorrectos" });
+      return res.status(401).json({ error: "Correo incorrectos" });
     }
 
     // 🔑 Comparar contraseñas con bcrypt
@@ -89,7 +89,7 @@ const login = async (req, res) => {
     const esValida = await bcrypt.compare(hash, user.contrasena);
     if (!esValida) {
       console.warn("⚠️ Contraseña incorrecta para:", Correo);
-      return res.status(401).json({ error: "Correo o contraseña incorrectos" });
+      return res.status(401).json({ error: "Contraseña incorrectos" });
     }
 
     // 🎫 Generar token JWT seguro
