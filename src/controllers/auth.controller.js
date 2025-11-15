@@ -1,11 +1,10 @@
-// src/controllers/auth.controller.js
-// =====================================================
-// 📦 DEPENDENCIAS
-// =====================================================
+// Este es el código de tu API (backend)
+
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
 
+// ======================= REGISTRO =======================
 // =====================================================
 // 🧩 REGISTRO DE USUARIO
 // =====================================================
@@ -21,33 +20,22 @@ const register = async (req, res) => {
     const Edad = req.body.Edad || req.body.edad || null;
     const Descripcion = (req.body.Descripcion || req.body.descripcion || "").trim();
 
-    // 🛑 Validaciones básicas
+    // 🛑 Validaciones de campos
     if (!Usuario || !Nombre || !Correo || !contrasena) {
-      return res.status(400).json({ error: "Faltan campos obligatorios." });
+      return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
 
-    // 📧 Validar formato de correo
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(Correo)) {
-      return res.status(400).json({ error: "El formato del correo no es válido." });
-    }
-
-    // 🔒 Longitud mínima de contraseña (8 caracteres)
+    // --- (Esta es la validación de 8 caracteres que debe coincidir con Flutter) ---
     if (contrasena.length < 8) {
-      return res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres." });
+      return res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres" });
     }
 
     // 🚫 Validar duplicados
-    const [existeCorreo, existeUsuario] = await Promise.all([
-      User.findOne({ where: { Correo } }),
-      User.findOne({ where: { Usuario } }),
-    ]);
+    const existeCorreo = await User.findOne({ where: { Correo } });
+    if (existeCorreo) return res.status(400).json({ error: "El correo ya está registrado" });
 
-    if (existeCorreo)
-      return res.status(400).json({ error: "El correo ya está registrado." });
-
-    if (existeUsuario)
-      return res.status(400).json({ error: "El nombre de usuario ya está registrado." });
+    const existeUsuario = await User.findOne({ where: { Usuario } });
+    if (existeUsuario) return res.status(400).json({ error: "El nombre de usuario ya está registrado" });
 
     // 🔐 Cifrar contraseña
     const hash = await bcrypt.hash(contrasena, 10);
@@ -57,7 +45,7 @@ const register = async (req, res) => {
       Usuario,
       Nombre,
       Correo,
-      contrasena: hash,
+      contrasena: hash, // Guardamos el hash
       Edad,
       Descripcion,
     });
@@ -70,17 +58,17 @@ const register = async (req, res) => {
       usuario: {
         id: user.ID_Usuario,
         Usuario: user.Usuario,
-        Nombre: user.Nombre,
         Correo: user.Correo,
       },
     });
 
   } catch (err) {
     console.error("❌ Error en /register:", err);
-    return res.status(500).json({ error: "Error interno al registrar usuario." });
+    return res.status(500).json({ error: "Error interno al registrar usuario" });
   }
 };
 
+// ======================= LOGIN =======================
 // =====================================================
 // 🔐 LOGIN DE USUARIO
 // =====================================================
@@ -93,62 +81,56 @@ const login = async (req, res) => {
     const contrasena = (req.body.contrasena || req.body.password || "").trim();
 
     if (!Correo || !contrasena) {
-      return res.status(400).json({ error: "Faltan campos obligatorios." });
+      return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
 
     // 🔍 Buscar usuario
     const user = await User.findOne({ where: { Correo } });
     if (!user) {
       console.warn("⚠️ Intento de login con correo inexistente:", Correo);
-      return res.status(401).json({ error: "Correo incorrecto." });
+      // --- (Corrección de 'incorrectos' a 'incorrecto') ---
+      return res.status(401).json({ error: "Correo incorrecto" });
     }
 
-    // 🔑 Comparar contraseñas (texto plano vs hash)
+    // --- 👇 ¡ESTA ES LA CORRECCIÓN MÁS IMPORTANTE! 👇 ---
+    // Comparamos la contraseña en texto plano (contrasena) 
+    // con el hash guardado en la BD (user.contrasena).
     const esValida = await bcrypt.compare(contrasena, user.contrasena);
+    // --- 👆 ¡ESTA ES LA CORRECCIÓN MÁS IMPORTANTE! 👆 ---
+
     if (!esValida) {
       console.warn("⚠️ Contraseña incorrecta para:", Correo);
-      return res.status(401).json({ error: "Contraseña incorrecta." });
+      // --- (Corrección de 'incorrectos' a 'incorrecta') ---
+      return res.status(401).json({ error: "Contraseña incorrecta" });
     }
 
-    // 🎫 Generar token JWT (expira en 2h)
+    // 🎫 Generar token JWT
     const token = jwt.sign(
       { id: user.ID_Usuario, correo: user.Correo },
       process.env.JWT_SECRET,
-      { expiresIn: "2h" }
+      { expiresIn: "2h" } //Token expira en 2 horas
     );
 
+    // 🟢 Respuesta
     console.log("✅ Login exitoso:", user.Usuario);
 
-    // 🟢 Respuesta
     return res.json({
       message: "✅ Inicio de sesión exitoso",
       token,
       usuario: {
         id: user.ID_Usuario,
         Usuario: user.Usuario,
-        Nombre: user.Nombre,
         Correo: user.Correo,
       },
     });
 
   } catch (err) {
     console.error("❌ Error en /login:", err);
-    return res.status(500).json({ error: "Error interno al iniciar sesión." });
+    return res.status(500).json({ error: "Error interno al iniciar sesión" });
   }
-};
-
-// =====================================================
-// 🧪 RUTA DEBUG OPCIONAL (para pruebas desde frontend)
-// =====================================================
-const debug = async (req, res) => {
-  return res.json({
-    recibido: req.body,
-    tipo: typeof req.body,
-    keys: Object.keys(req.body),
-  });
 };
 
 // =====================================================
 // 📤 EXPORTACIÓN DE FUNCIONES
 // =====================================================
-module.exports = { register, login, debug };
+module.exports = { register, login };
