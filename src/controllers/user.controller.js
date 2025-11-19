@@ -65,13 +65,14 @@ exports.createUser = async (req, res) => {
 };
 
 // =======================================
-// ✏️ Actualizar perfil
+// ✏️ Actualizar perfil (CORREGIDO)
 // =======================================
 exports.updateUser = async (req, res) => {
   try {
-    const { Usuario, Nombre, Correo, Edad, Descripcion } = req.body;
+    const { Usuario, Nombre, Correo, Edad, Descripcion, foto } = req.body;
 
-    if (!Usuario && !Nombre && !Correo && !Edad && !Descripcion) {
+    // Verifica que haya al menos un campo a actualizar
+    if (!Usuario && !Nombre && !Correo && !Edad && !Descripcion && !foto) {
       return res.status(400).json({ error: "No hay campos para actualizar" });
     }
 
@@ -91,18 +92,21 @@ exports.updateUser = async (req, res) => {
         return res.status(400).json({ error: "El nombre de usuario ya está en uso" });
     }
 
+    // Actualizar campos (incluye la foto)
     const updatedUser = await userRepository.updateUser(req.params.id, {
       Usuario,
       Nombre,
       Correo,
       Edad,
       Descripcion,
+      foto, // 👈 NECESARIO PARA GUARDAR LA FOTO
     });
 
     res.json({
       message: "✅ Perfil actualizado correctamente",
       updatedUser,
     });
+
   } catch (err) {
     console.error("❌ Error al actualizar usuario:", err);
     res.status(500).json({ error: "Error al actualizar usuario" });
