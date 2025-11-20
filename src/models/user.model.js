@@ -14,8 +14,7 @@ const User = sequelize.define('T_Usuario', {
   },
   Nombre: {
     type: DataTypes.STRING(50),
-    allowNull: false,
-    unique: true
+    allowNull: false
   },
   Correo: {
     type: DataTypes.STRING(50),
@@ -23,10 +22,10 @@ const User = sequelize.define('T_Usuario', {
     unique: true,
     validate: { isEmail: true }
   },
-  contrasena: { // usamos "contrasena" en JS
+  contrasena: {
     type: DataTypes.STRING(100),
     allowNull: false,
-    field: 'contraseña' // Sequelize lo mapea a la columna real
+    field: 'contraseña'
   },
   Edad: {
     type: DataTypes.INTEGER,
@@ -39,14 +38,21 @@ const User = sequelize.define('T_Usuario', {
   Descripcion: {
     type: DataTypes.STRING(200),
     allowNull: true
+  },
+
+  // 👇 AGREGAR ESTE CAMPO
+  foto: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    field: 'fotodeperfil_url'   // 👈 Mapea el nombre REAL de la BD
   }
+
 }, {
   tableName: 'T_Usuario',
   timestamps: false
 });
 
 module.exports = User;
-
 
 
 
