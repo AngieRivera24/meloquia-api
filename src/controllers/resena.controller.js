@@ -84,29 +84,55 @@ const crearResena = async (req, res) => {
 };
 
 // ============================
-// Editar Reseña
+// Editar Reseña (versión corregida y estable)
 // ============================
 const editarResena = async (req, res) => {
   try {
     const id = req.params.id;
-    const { Rating, rating, Calificacion, calificacion, Opinion, opinion } =
-      req.body;
 
-    const calif = Rating || rating || Calificacion || calificacion;
-    const op = Opinion || opinion || null;
+    // Extraer posibles nombres de campos
+    const {
+      Rating,
+      rating,
+      Calificacion,
+      calificacion,
+      Opinion,
+      opinion
+    } = req.body;
 
+    // Buscar la reseña existente
     const reseña = await Resena.findByPk(id);
     if (!reseña)
       return res
         .status(404)
         .json({ success: false, error: "Reseña no encontrada" });
 
+    // Guardar valores antiguos (para auditoría)
     const reseñaAntigua = reseña.toJSON();
 
-    reseña.Rating = calif ?? reseña.Rating;
-    reseña.Opinion = op ?? reseña.Opinion;
+    // ======================================
+    // 🔥 FIX CRÍTICO:
+    // Si no se envía Rating, se conserva el existente.
+    // Si no se envía Opinion, también se conserva.
+    // ======================================
+    const calif =
+      Rating ??
+      rating ??
+      Calificacion ??
+      calificacion ??
+      reseña.Rating; // fallback seguro
+
+    const op =
+      Opinion ??
+      opinion ??
+      reseña.Opinion; // fallback seguro
+
+    // Aplicar cambios
+    reseña.Rating = calif;
+    reseña.Opinion = op;
     await reseña.save();
 
+    // Registrar auditoría
     await ResenaAuditoria.create({
       ID_reseña: id,
       ID_Usuario: reseña.ID_Usuario,
@@ -124,6 +150,7 @@ const editarResena = async (req, res) => {
       message: "✅ Reseña editada correctamente",
       reseña,
     });
+
   } catch (err) {
     console.error("❌ Error al editar reseña:", err);
     return res.status(500).json({
