@@ -41,6 +41,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/spotify", spotifyRoutes);
 app.use("/api/resenas", resenaRoutes);
+app.use("/api/listas", require("./routes/lista.routes"));
 
 /* ============================================
    ⚙️ INICIO DEL SERVIDOR
