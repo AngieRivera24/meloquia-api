@@ -25,8 +25,12 @@ async function getAlbumById(albumId) {
     };
 
   } catch (err) {
-    console.error("❌ Error en getAlbumById:", err.response?.data || err.message);
-    return null;
+    console.error("❌ Error en getAlbumById Spotify:", {
+    status: err.response?.status,
+    data: err.response?.data,
+    message: err.message
+  });
+  return null;
   }
 }
 
