@@ -40,13 +40,15 @@ const crearResena = async (req, res) => {
       });
     }
 
-    // Verificar si el álbum existe o traerlo de Spotify
-    const album = await getAlbumIfNotExists(idAlbum);
-    if (!album)
-      return res.status(404).json({
-        success: false,
-        error: "No se encontró el álbum en Spotify",
-      });
+   // 🔄 OPCIÓN SUAVE: solo intentamos validar, pero NO bloqueamos
+try {
+  const album = await getAlbumIfNotExists(idAlbum);
+  if (!album) {
+    console.warn("⚠️ Aviso: el álbum no se encontró en Spotify, pero se continuará con la creación de la reseña.");
+  }
+} catch (e) {
+  console.warn("⚠️ Error al validar álbum en Spotify, se continúa de todos modos:", e.message);
+}
 
     // Crear la reseña en la base de datos
     const nuevaResena = await Resena.create({
