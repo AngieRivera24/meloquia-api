@@ -9,6 +9,8 @@ const userRoutes = require("./routes/user.routes");
 const authRoutes = require("./routes/auth.routes");
 const spotifyRoutes = require("./routes/spotify.routes");
 const resenaRoutes = require("./routes/resena.routes");
+const likeRoutes = require("./routes/like.routes");
+const comentarioRoutes = require("./routes/comentario.routes");
 
 const app = express();
 
@@ -42,6 +44,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/spotify", spotifyRoutes);
 app.use("/api/resenas", resenaRoutes);
 app.use("/api/listas", require("./routes/lista.routes"));
+app.use("/api/likes", likeRoutes);
+app.use("/api/comentarios", comentarioRoutes);
 
 /* ============================================
    ⚙️ INICIO DEL SERVIDOR
